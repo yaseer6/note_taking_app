@@ -6,11 +6,15 @@ import 'package:note_taking_app/services/note_storage_service.dart';
 class NotesList extends StatefulWidget {
   final ValueNotifier<int> refreshNotifier;
   final String fromPage;
+  final List<String>? selectedNoteIds;
+  final Function(String)? onNoteSelected;
 
   const NotesList({
     super.key,
     required this.refreshNotifier,
     required this.fromPage,
+    this.selectedNoteIds,
+    this.onNoteSelected,
   });
 
   @override
@@ -78,12 +82,17 @@ class _NotesListState extends State<NotesList> {
           ),
           itemCount: notes.length,
           itemBuilder: (context, index) {
+            final note = notes[index];
             return NoteCard(
-              note: notes[index],
+              note: note,
               onRefresh: () {
                 widget.refreshNotifier.value++;
               },
               fromPage: widget.fromPage,
+              isSelected: widget.selectedNoteIds?.contains(note.id) ?? false,
+              onSelected: () {
+                widget.onNoteSelected?.call(note.id);
+              },
             );
           },
         );

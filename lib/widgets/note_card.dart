@@ -3,61 +3,56 @@ import 'package:note_taking_app/core/routes.dart';
 import '../models/note_model.dart';
 import 'package:intl/intl.dart';
 
-class NoteCard extends StatefulWidget {
+class NoteCard extends StatelessWidget {
   final Note note;
   final VoidCallback onRefresh;
   final String fromPage;
+  final bool isSelected;
+  final VoidCallback onSelected;
 
   const NoteCard({
     super.key,
     required this.note,
     required this.onRefresh,
     required this.fromPage,
+    required this.isSelected,
+    required this.onSelected,
   });
-
-  @override
-  State<NoteCard> createState() => _NoteCardState();
-}
-
-class _NoteCardState extends State<NoteCard> {
-  bool isSelected = false;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        switch(widget.fromPage) {
+        switch(fromPage) {
           case AppRoutes.home:
             final didUpdate = await Navigator.pushNamed(
               context,
               AppRoutes.addEditNote,
-              arguments: widget.note,
+              arguments: note,
             );
 
             if(didUpdate == true) {
-              widget.onRefresh();
+              onRefresh();
             }
             break;
           case AppRoutes.selectNotes:
-            isSelected = isSelected? false : true;
-            if(isSelected) {
-
-            }
-            setState(() {});
+            onSelected();
+            break;
         }
       },
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected? Color.fromRGBO(0, 0, 0, 0.2): Color.fromRGBO(0, 0, 0, 0.06),
+          color: isSelected? Colors.blue.withAlpha(77): const Color.fromRGBO(0, 0, 0, 0.06),
           borderRadius: BorderRadius.circular(12),
+          border: isSelected ? Border.all(color: Colors.blue, width: 2) : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             //displays date
             Text(
-              _formatDate(widget.note.createdAt),
+              _formatDate(note.createdAt),
               style: const TextStyle(
                 fontSize: 12,
                 color: Colors.black54,
@@ -67,7 +62,7 @@ class _NoteCardState extends State<NoteCard> {
             const SizedBox(height: 4),
             //displays title
             Text(
-              widget.note.title,
+              note.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
@@ -77,21 +72,21 @@ class _NoteCardState extends State<NoteCard> {
             ),
             const SizedBox(height: 6),
             //displays tags
-            if(widget.note.tags.isNotEmpty)
+            if(note.tags.isNotEmpty)
               SizedBox(
               height: 40,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: widget.note.tags.length,
+                itemCount: note.tags.length,
                 itemBuilder: (context, index) {
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
                     child: Chip(
                       padding: const EdgeInsets.all(0),
-                      backgroundColor: isSelected? Color.fromRGBO(0, 0, 0, 0.2): Color.fromRGBO(0, 0, 0, 0.1),
+                      backgroundColor: isSelected? Colors.blue.withAlpha(77): const Color.fromRGBO(0, 0, 0, 0.1),
                       side: BorderSide.none,
                       label: Text(
-                        widget.note.tags[index],
+                        note.tags[index],
                       ),
                       labelStyle: const TextStyle(
                           fontSize: 12
@@ -105,7 +100,7 @@ class _NoteCardState extends State<NoteCard> {
             //displays content
             Expanded(
               child: Text(
-                widget.note.content,
+                note.content,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 14),

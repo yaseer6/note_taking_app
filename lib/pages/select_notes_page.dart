@@ -11,6 +11,7 @@ class SelectNotesPage extends StatefulWidget {
 
 class _SelectNotesPageState extends State<SelectNotesPage> {
   final ValueNotifier<int> _refreshNotes = ValueNotifier(0);
+  final List<String> _selectedNoteIds = [];
 
   @override
   Widget build(BuildContext context) {
@@ -18,23 +19,45 @@ class _SelectNotesPageState extends State<SelectNotesPage> {
       appBar: AppBar(
         title: const Text('Select Note'),
         actionsPadding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
-        actions: const [
-          Icon(Icons.search),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: () {
+              Navigator.pop(context, _selectedNoteIds);
+            },
+          ),
         ],
       ),
-      body: Column(
-        children: [
-          const Divider(
-            thickness: 2,
-            color: Color.fromRGBO(0, 0, 0, 0.08),
-          ),
-          Expanded(
-            child: NotesList(
-              refreshNotifier: _refreshNotes,
-              fromPage: AppRoutes.selectNotes,
+      body: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, Object? result) {
+          if(didPop) return;
+          Navigator.pop(context, _selectedNoteIds);
+        },
+        child: Column(
+          children: [
+            const Divider(
+              thickness: 2,
+              color: Color.fromRGBO(0, 0, 0, 0.08),
             ),
-          ),
-        ],
+            Expanded(
+              child: NotesList(
+                refreshNotifier: _refreshNotes,
+                fromPage: AppRoutes.selectNotes,
+                selectedNoteIds: _selectedNoteIds,
+                onNoteSelected: (noteId) {
+                  setState(() {
+                    if(_selectedNoteIds.contains(noteId)) {
+                      _selectedNoteIds.remove(noteId);
+                    } else {
+                      _selectedNoteIds.add(noteId);
+                    }
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

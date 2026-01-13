@@ -74,7 +74,11 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                   if(context.mounted) Navigator.pop(context, true);
                   break;
                 case 'addNote':
-                  Navigator.pushNamed(context, AppRoutes.selectNotes);
+                  final result = await Navigator.pushNamed(context, AppRoutes.selectNotes);
+                  if(result != null && result is List<String> && result.isNotEmpty) {
+                    final selectedIds = result;
+                    //have to handle selectedNoteIds
+                  }
               }
             },
             itemBuilder: (context) => const <PopupMenuEntry<String>>[
