@@ -30,8 +30,8 @@ class FolderService {
         return [];
       }
 
-      final List<dynamic> decodedJson = jsonDecode(jsonString); //List<Map<String, dynamic>>
-      _cachedFolders = decodedJson.map((e) => Folder.fromJson(e)).toList(); //List<Folder>
+      final List<dynamic> decodedJson = jsonDecode(jsonString);
+      _cachedFolders = decodedJson.map((e) => Folder.fromJson(e)).toList();
       return List.from(_cachedFolders!);
     } catch (e) {
       return [];
