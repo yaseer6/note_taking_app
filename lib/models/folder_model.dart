@@ -1,7 +1,7 @@
 class Folder {
   final String id;
   String name;
-  final int iconCode;
+  int iconCode;
   List<String> noteIds;
   final DateTime createdAt;
   DateTime updatedAt;
@@ -32,9 +32,7 @@ class Folder {
       id: json['id'],
       name: json['name'],
       iconCode: json['iconCode'],
-      noteIds: (json['noteIds'] as List<dynamic>)
-          .map((e) => e.toString())
-          .toList(),
+      noteIds: (json['noteIds'] as List<dynamic>).map((e) => e.toString()).toList(),
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
     );
