@@ -26,6 +26,9 @@ class FolderCard extends StatelessWidget {
           onRefresh();
         }
       },
+      onLongPress: () {
+        Navigator.pushNamed(context, AppRoutes.addEditNote);
+      },
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
