@@ -14,6 +14,17 @@ class _SelectNotesPageState extends State<SelectNotesPage> {
   final List<String> _selectedNoteIds = [];
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final args = ModalRoute.of(context)!.settings.arguments;
+
+    if(args != null && args is List<String>) {
+      _selectedNoteIds.addAll(args);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(

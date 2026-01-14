@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/routes.dart';
 import '../models/note_model.dart';
 import 'note_card.dart';
 import 'package:note_taking_app/services/note_storage_service.dart';
@@ -50,6 +51,20 @@ class _NotesListState extends State<NotesList> {
     super.dispose();
   }
 
+  List<Note> selectedNotes(List<Note> allNotes) {
+    if(widget.selectedNoteIds == null) {
+      return [];
+    }
+    Map<String, Note> notesMap = { for (var n in allNotes) n.id : n };
+
+    List<Note> selectedNotes = [
+      for (var id in widget.selectedNoteIds!)
+        if (notesMap[id] != null) notesMap[id]!
+    ];
+
+    return selectedNotes;
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Note>>(
@@ -80,9 +95,9 @@ class _NotesListState extends State<NotesList> {
             crossAxisCount: 2,
             childAspectRatio: 0.9,
           ),
-          itemCount: notes.length,
+          itemCount: widget.fromPage == AppRoutes.folderDetails ? selectedNotes(notes).length : notes.length,
           itemBuilder: (context, index) {
-            final note = notes[index];
+            final note = widget.fromPage == AppRoutes.folderDetails? selectedNotes(notes)[index] : notes[index];
             return NoteCard(
               note: note,
               onRefresh: () {

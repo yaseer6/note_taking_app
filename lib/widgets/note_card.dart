@@ -24,7 +24,7 @@ class NoteCard extends StatelessWidget {
     return GestureDetector(
       onTap: () async {
         switch(fromPage) {
-          case AppRoutes.home:
+          case AppRoutes.home || AppRoutes.folderDetails:
             final didUpdate = await Navigator.pushNamed(
               context,
               AppRoutes.addEditNote,
@@ -43,9 +43,9 @@ class NoteCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected? Colors.blue.withAlpha(77): const Color.fromRGBO(0, 0, 0, 0.06),
+          color: isSelected && fromPage == AppRoutes.selectNotes? Colors.blue.withAlpha(77): const Color.fromRGBO(0, 0, 0, 0.06),
           borderRadius: BorderRadius.circular(12),
-          border: isSelected ? Border.all(color: Colors.blue, width: 2) : null,
+          border: isSelected && fromPage == AppRoutes.selectNotes? Border.all(color: Colors.blue, width: 2) : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,7 +83,7 @@ class NoteCard extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
                     child: Chip(
                       padding: const EdgeInsets.all(0),
-                      backgroundColor: isSelected? Colors.blue.withAlpha(77): const Color.fromRGBO(0, 0, 0, 0.1),
+                      backgroundColor: isSelected && fromPage == AppRoutes.selectNotes? Colors.blue.withAlpha(77): const Color.fromRGBO(0, 0, 0, 0.1),
                       side: BorderSide.none,
                       label: Text(
                         note.tags[index],

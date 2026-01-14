@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:note_taking_app/models/folder_model.dart';
 import 'package:note_taking_app/services/folder_storage_service.dart';
 import 'package:intl/intl.dart';
+import 'package:note_taking_app/widgets/notes_list.dart';
 import '../core/routes.dart';
 
 class FolderDetailsPage extends StatefulWidget {
@@ -12,8 +13,14 @@ class FolderDetailsPage extends StatefulWidget {
 }
 
 class _FolderDetailsPageState extends State<FolderDetailsPage> {
+  final ValueNotifier<int> _refreshNotes = ValueNotifier(0);
   final _titleController = TextEditingController();
   Folder? folder;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   void didChangeDependencies() {
@@ -60,7 +67,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                     id: folder!.id,
                     name: _titleController.text,
                     iconCode: folder!.iconCode,
-                    noteIds: [],
+                    noteIds: folder!.noteIds,
                     createdAt: folder!.createdAt,
                     updatedAt: DateTime.now(),
                   );
@@ -74,11 +81,17 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                   if(context.mounted) Navigator.pop(context, true);
                   break;
                 case 'addNote':
-                  final result = await Navigator.pushNamed(context, AppRoutes.selectNotes);
+                  final result = await Navigator.pushNamed(
+                    context,
+                    AppRoutes.selectNotes,
+                    arguments: folder!.noteIds,
+                  );
+
                   if(result != null && result is List<String> && result.isNotEmpty) {
-                    final selectedIds = result;
-                    //have to handle selectedNoteIds
+                    folder!.noteIds = result;
                   }
+                  _refreshNotes.value++;
+                  break;
               }
             },
             itemBuilder: (context) => const <PopupMenuEntry<String>>[
@@ -182,7 +195,14 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                 ],
               ),
             ),
-          ]
+            Expanded(
+              child: NotesList(
+                refreshNotifier: _refreshNotes,
+                fromPage: AppRoutes.folderDetails,
+                selectedNoteIds: folder!.noteIds,
+              ),
+            ),
+          ],
         ),
       ),
     );
