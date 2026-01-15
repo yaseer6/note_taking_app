@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:note_taking_app/data/folder_icons.dart';
 import 'package:note_taking_app/models/folder_model.dart';
 import 'package:note_taking_app/services/folder_storage_service.dart';
@@ -16,7 +17,10 @@ class FolderDetailsPage extends StatefulWidget {
 class _FolderDetailsPageState extends State<FolderDetailsPage> {
   final ValueNotifier<int> _refreshNotes = ValueNotifier(0);
   final _titleController = TextEditingController();
-  Folder? folder;
+  late String _currentFolderName;
+  late int _currentIconCode;
+  late List<String> _currentNoteIds;
+  Folder? _originalFolder;
 
   @override
   void initState() {
@@ -29,9 +33,13 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
 
     final args = ModalRoute.of(context)!.settings.arguments as Folder;
 
-    if(folder == null) {
-      folder = args;
-      _titleController.text = folder!.name;
+    if(_originalFolder == null) {
+      _originalFolder = args;
+      _titleController.text = _originalFolder!.name;
+
+      _currentFolderName = _originalFolder!.name;
+      _currentIconCode = _originalFolder!.iconCode;
+      _currentNoteIds.addAll(_originalFolder!.noteIds);
     }
   }
 
@@ -46,18 +54,30 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
       return;
     }
 
-    final updatedFolder = Folder(
-      id: folder!.id,
+    _originalFolder!.name = _titleController.text;
+    if(!_isFolderModified()) {
+      Navigator.pop(context, false);
+      return;
+    }
+
+    final updatedFolder = _originalFolder!.copyWith(
       name: _titleController.text,
-      iconCode: folder!.iconCode,
-      noteIds: folder!.noteIds,
-      createdAt: folder!.createdAt,
+      iconCode: _currentIconCode,
+      noteIds: _currentNoteIds,
       updatedAt: DateTime.now(),
     );
 
     await FolderService.updateFolder(updatedFolder);
 
     if(context.mounted) Navigator.pop(context, true);
+  }
+
+  bool _isFolderModified() {
+    final bool nameChanged = _originalFolder!.name != _currentFolderName;
+    final bool iconChanged = _originalFolder!.iconCode != _currentIconCode;
+    final bool notesChanged = !listEquals(_originalFolder!.noteIds, _currentNoteIds);
+
+    return nameChanged || iconChanged || notesChanged;
   }
 
   @override
@@ -81,19 +101,19 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                 case 'save':
                   _save(context);
                   break;
-                case 'delete':
-                  await FolderService.deleteFolder(folder!.id);
+                case 'deleteFolder':
+                  await FolderService.deleteFolder(_originalFolder!.id);
                   if(context.mounted) Navigator.pop(context, true);
                   break;
-                case 'addNote':
+                case 'addRemoveNote':
                   final result = await Navigator.pushNamed(
                     context,
                     AppRoutes.selectNotes,
-                    arguments: folder!.noteIds,
+                    arguments: _currentNoteIds,
                   );
 
                   if(result != null && result is List<String> && result.isNotEmpty) {
-                    folder!.noteIds = result;
+                    _currentNoteIds = result;
                   }
                   _refreshNotes.value++;
                   break;
@@ -105,12 +125,12 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                 child: Text('Save'),
               ),
               PopupMenuItem<String>(
-                value: 'addNote',
-                child: Text('Add Note'),
+                value: 'addRemoveNote',
+                child: Text('Add/Remove Note'),
               ),
               PopupMenuItem<String>(
-                value: 'delete',
-                child: Text('Delete'),
+                value: 'deleteFolder',
+                child: Text('Delete Folder'),
               ),
             ],
           ),
@@ -140,7 +160,6 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                     //title text field
                     Row(
                       children: [
-                        // const SizedBox(width: 8,),
                         Expanded(
                           child: TextField(
                             controller: _titleController,
@@ -185,10 +204,12 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                             );
 
                             if(iconCode != null) {
-                              folder!.iconCode = iconCode;
+                              setState(() {
+                                _currentIconCode = iconCode;
+                              });
                             }
                           },
-                          icon: Icon(IconData(folder!.iconCode, fontFamily: 'MaterialIcons')),
+                          icon: Icon(IconData(_currentIconCode, fontFamily: 'MaterialIcons')),
                           iconSize: 28,
                           tooltip: "Change icon",
                         ),
@@ -217,7 +238,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8.0),
                               child: Text(
-                                DateFormat('dd MMM yyyy, hh:mm a').format(folder!.createdAt),
+                                DateFormat('dd MMM yyyy, hh:mm a').format(_originalFolder!.createdAt),
                               ),
                             ),
                           ],
@@ -237,7 +258,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8.0),
                               child: Text(
-                                DateFormat('dd MMM yyyy, hh:mm a').format(folder!.updatedAt),
+                                DateFormat('dd MMM yyyy, hh:mm a').format(_originalFolder!.updatedAt),
                               ),
                             ),
                           ],
@@ -256,7 +277,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                 child: NotesList(
                   refreshNotifier: _refreshNotes,
                   fromPage: AppRoutes.folderDetails,
-                  selectedNoteIds: folder!.noteIds,
+                  selectedNoteIds: _currentNoteIds,
                 ),
               ),
             ],

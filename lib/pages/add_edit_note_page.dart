@@ -30,6 +30,29 @@ class _AddEditNotePageState extends State<AddEditNotePage> {
     }
   }
 
+  void _save(BuildContext context) async {
+    if(_titleController.text.trim().isEmpty && _contentController.text.trim().isEmpty) {
+      Navigator.pop(context);
+      return;
+    }
+
+    final note = Note(
+      id: _existingNote?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      title: _titleController.text.trim(),
+      content: _contentController.text.trim(),
+      tags: _currentTags,
+      createdAt: DateTime.now(),
+    );
+
+    if(_existingNote == null) {
+      await NoteService.addNote(note);
+    } else {
+      await NoteService.updateNote(note);
+    }
+
+    if(context.mounted) Navigator.pop(context, true);
+  }
+
   void _showTagMenu(
       BuildContext context,
       Offset position,
@@ -129,32 +152,12 @@ class _AddEditNotePageState extends State<AddEditNotePage> {
             onSelected: (value) async {
               switch(value) {
                 case 'save':
-                  if(_titleController.text.trim().isEmpty && _contentController.text.trim().isEmpty) {
-                    Navigator.pop(context);
-                    return;
-                  }
-
-                  final noteToSave = Note(
-                    id: _existingNote?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-                    title: _titleController.text.trim(),
-                    content: _contentController.text.trim(),
-                    tags: _currentTags,
-                    createdAt: DateTime.now(),
-                  );
-
-                  if(_existingNote == null) {
-                    await NoteService.addNote(noteToSave);
-                  } else {
-                    await NoteService.updateNote(noteToSave);
-                  }
-
-                  if(context.mounted) Navigator.pop(context, true);
+                  _save(context);
                   break;
                 case 'delete':
                   if(_existingNote == null) return;
                   await NoteService.deleteNote(_existingNote!.id);
-                  if(!context.mounted) return;
-                  Navigator.pop(context, true);
+                  if(context.mounted) Navigator.pop(context, true);
                   break;
               }
             },

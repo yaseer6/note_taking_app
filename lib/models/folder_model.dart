@@ -26,6 +26,22 @@ class Folder {
     };
   }
 
+  Folder copyWith({
+    String? name,
+    int? iconCode,
+    List<String>? noteIds,
+    DateTime? updatedAt,
+  }) {
+    return Folder(
+      id: id,
+      name: name ?? this.name,
+      iconCode: iconCode ?? this.iconCode,
+      noteIds: noteIds ?? this.noteIds,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
 
   factory Folder.fromJson(Map<String, dynamic> json) {
     return Folder(

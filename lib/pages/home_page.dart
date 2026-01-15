@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:note_taking_app/widgets/folders_list.dart';
 import 'package:note_taking_app/widgets/notes_list.dart';
 import '../core/routes.dart';
-import 'package:note_taking_app/widgets/add_edit_folder_dialog.dart';
+import 'package:note_taking_app/widgets/add_folder_dialog.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
