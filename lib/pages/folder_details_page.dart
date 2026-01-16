@@ -17,29 +17,22 @@ class FolderDetailsPage extends StatefulWidget {
 class _FolderDetailsPageState extends State<FolderDetailsPage> {
   final ValueNotifier<int> _refreshNotes = ValueNotifier(0);
   final _titleController = TextEditingController();
-  late String _currentFolderName;
   late int _currentIconCode;
   late List<String> _currentNoteIds;
   Folder? _originalFolder;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final args = ModalRoute.of(context)!.settings.arguments as Folder;
-
     if(_originalFolder == null) {
+      final args = ModalRoute.of(context)!.settings.arguments as Folder;
+
       _originalFolder = args;
       _titleController.text = _originalFolder!.name;
 
-      _currentFolderName = _originalFolder!.name;
       _currentIconCode = _originalFolder!.iconCode;
-      _currentNoteIds.addAll(_originalFolder!.noteIds);
+      _currentNoteIds = List<String>.from(_originalFolder!.noteIds);
     }
   }
 
@@ -54,7 +47,6 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
       return;
     }
 
-    _originalFolder!.name = _titleController.text;
     if(!_isFolderModified()) {
       Navigator.pop(context, false);
       return;
@@ -73,7 +65,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
   }
 
   bool _isFolderModified() {
-    final bool nameChanged = _originalFolder!.name != _currentFolderName;
+    final bool nameChanged = _originalFolder!.name != _titleController.text;
     final bool iconChanged = _originalFolder!.iconCode != _currentIconCode;
     final bool notesChanged = !listEquals(_originalFolder!.noteIds, _currentNoteIds);
 
@@ -96,29 +88,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
           PopupMenuButton(
             icon: const Icon(Icons.more_horiz),
             iconSize: 28,
-            onSelected: (value) async {
-              switch(value) {
-                case 'save':
-                  _save(context);
-                  break;
-                case 'deleteFolder':
-                  await FolderService.deleteFolder(_originalFolder!.id);
-                  if(context.mounted) Navigator.pop(context, true);
-                  break;
-                case 'addRemoveNote':
-                  final result = await Navigator.pushNamed(
-                    context,
-                    AppRoutes.selectNotes,
-                    arguments: _currentNoteIds,
-                  );
-
-                  if(result != null && result is List<String> && result.isNotEmpty) {
-                    _currentNoteIds = result;
-                  }
-                  _refreshNotes.value++;
-                  break;
-              }
-            },
+            onSelected: _handleMenuSelection,
             itemBuilder: (context) => const <PopupMenuEntry<String>>[
               PopupMenuItem<String>(
                 value: 'save',
@@ -157,114 +127,9 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                       color: Color.fromRGBO(0, 0, 0, 0.08),
                     ),
                     const SizedBox(height: 16,),
-                    //title text field
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _titleController,
-                            decoration: const InputDecoration(
-                              hintText: 'title..',
-                              border: UnderlineInputBorder(
-                                  borderSide: BorderSide.none
-                              ),
-                            ),
-                            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () async {
-                            final iconCode = await showModalBottomSheet(
-                              context: context,
-                              builder: (context) {
-                                return GridView.builder(
-                                  padding: EdgeInsets.all(16),
-                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 5,
-                                    mainAxisSpacing: 12,
-                                    crossAxisSpacing: 12,
-                                  ),
-                                  itemCount: folderIcons.length,
-                                  itemBuilder: (context, index) {
-                                    return GestureDetector(
-                                      onTap: () {
-                                        Navigator.pop(context, folderIcons[index].codePoint);
-                                      },
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Color.fromRGBO(0, 0, 0, 0.06),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Icon(IconData(folderIcons[index].codePoint, fontFamily: 'MaterialIcons')),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-
-                            if(iconCode != null) {
-                              setState(() {
-                                _currentIconCode = iconCode;
-                              });
-                            }
-                          },
-                          icon: Icon(IconData(_currentIconCode, fontFamily: 'MaterialIcons')),
-                          iconSize: 28,
-                          tooltip: "Change icon",
-                        ),
-                      ],
-                    ),
+                    _buildTitleEditor(),
                     const SizedBox(height: 12,),
-                    Table(
-                      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                      columnWidths: const <int, TableColumnWidth>{
-                        0: FlexColumnWidth(1),
-                        1: FlexColumnWidth(2),
-                      },
-                      children: <TableRow>[
-                        //createdAt
-                        TableRow(
-                          children: <Widget>[
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text(
-                                'Created At',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text(
-                                DateFormat('dd MMM yyyy, hh:mm a').format(_originalFolder!.createdAt),
-                              ),
-                            ),
-                          ],
-                        ),
-                        //updatedAt
-                        TableRow(
-                          children: <Widget>[
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text(
-                                'Last Modified',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text(
-                                DateFormat('dd MMM yyyy, hh:mm a').format(_originalFolder!.updatedAt),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                    _buildMetadataTable(),
                     const SizedBox(height: 8,),
                     const Divider(
                       thickness: 2,
@@ -284,6 +149,146 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _handleMenuSelection(String value) async {
+    switch(value) {
+      case 'save':
+        _save(context);
+        break;
+      case 'deleteFolder':
+        await FolderService.deleteFolder(_originalFolder!.id);
+        if(mounted) Navigator.pop(context, true);
+        break;
+      case 'addRemoveNote':
+        final result = await Navigator.pushNamed(
+          context,
+          AppRoutes.selectNotes,
+          arguments: _currentNoteIds,
+        );
+
+        if(result != null && result is List<String>) {
+          setState(() {
+            _currentNoteIds = result;
+          });
+        }
+        _refreshNotes.value++;
+        break;
+    }
+  }
+
+  Widget _buildTitleEditor() {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _titleController,
+            decoration: const InputDecoration(
+              hintText: 'title..',
+              border: UnderlineInputBorder(
+                  borderSide: BorderSide.none
+              ),
+            ),
+            style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ),
+        IconButton(
+          onPressed: _showIconPicker,
+          icon: Icon(IconData(_currentIconCode, fontFamily: 'MaterialIcons')),
+          iconSize: 28,
+          tooltip: "Change icon",
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showIconPicker() async {
+    final iconCode = await showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return GridView.builder(
+          padding: EdgeInsets.all(16),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 5,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+          ),
+          itemCount: folderIcons.length,
+          itemBuilder: (context, index) {
+            return GestureDetector(
+              onTap: () {
+                Navigator.pop(context, folderIcons[index].codePoint);
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Color.fromRGBO(0, 0, 0, 0.06),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(IconData(folderIcons[index].codePoint, fontFamily: 'MaterialIcons')),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if(iconCode != null) {
+      setState(() {
+        _currentIconCode = iconCode;
+      });
+    }
+  }
+
+  Widget _buildMetadataTable() {
+    return Table(
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      columnWidths: const <int, TableColumnWidth>{
+        0: FlexColumnWidth(1),
+        1: FlexColumnWidth(2),
+      },
+      children: <TableRow>[
+        //createdAt
+        TableRow(
+          children: <Widget>[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Created At',
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                DateFormat('dd MMM yyyy, hh:mm a').format(_originalFolder!.createdAt),
+              ),
+            ),
+          ],
+        ),
+        //updatedAt
+        TableRow(
+          children: <Widget>[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Last Modified',
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                DateFormat('dd MMM yyyy, hh:mm a').format(_originalFolder!.updatedAt),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
