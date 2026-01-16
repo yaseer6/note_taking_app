@@ -1,12 +1,12 @@
 class Folder {
   final String id;
-  String name;
-  int iconCode;
-  List<String> noteIds;
+  final String name;
+  final int iconCode;
+  final List<String> noteIds;
   final DateTime createdAt;
-  DateTime updatedAt;
+  final DateTime updatedAt;
 
-  Folder({
+  const Folder({
     required this.id,
     required this.name,
     required this.iconCode,
@@ -33,11 +33,11 @@ class Folder {
     DateTime? updatedAt,
   }) {
     return Folder(
-      id: id,
+      id: this.id,
       name: name ?? this.name,
       iconCode: iconCode ?? this.iconCode,
       noteIds: noteIds ?? this.noteIds,
-      createdAt: createdAt,
+      createdAt: this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -48,7 +48,7 @@ class Folder {
       id: json['id'],
       name: json['name'],
       iconCode: json['iconCode'],
-      noteIds: (json['noteIds'] as List<dynamic>).map((e) => e.toString()).toList(),
+      noteIds: List<String>.from(json['noteIds'] ?? []),
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
     );

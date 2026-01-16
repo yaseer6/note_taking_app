@@ -1,29 +1,33 @@
 class Note {
   final String id;
-  String title;
-  String content;
-  List<String> tags;
+  final String title;
+  final String content;
+  final List<String> tags;
   final DateTime createdAt;
+  final DateTime updatedAt;
 
-  Note({
+  const Note({
     required this.id,
     required this.title,
     required this.content,
     required this.tags,
     required this.createdAt,
+    required this.updatedAt,
   });
 
   Note copyWith({
     String? title,
     String? content,
     List<String>? tags,
+    DateTime? updatedAt,
   }) {
     return Note(
-      id: id,
+      id: this.id,
       title: title ?? this.title,
       content: content ?? this.content,
-      tags: tags ?? List.from(this.tags),
-      createdAt: createdAt,
+      tags: tags ?? this.tags,
+      createdAt: this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -44,6 +48,7 @@ class Note {
       content: json['content'],
       tags: List<String>.from(json['tags'] ?? []),
       createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
     );
   }
 }
