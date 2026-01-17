@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../core/routes.dart';
 import '../widgets/notes_list.dart';
@@ -11,7 +12,8 @@ class SelectNotesPage extends StatefulWidget {
 
 class _SelectNotesPageState extends State<SelectNotesPage> {
   final ValueNotifier<int> _refreshNotes = ValueNotifier(0);
-  final List<String> _selectedNoteIds = [];
+  final List<String> _originalSelectedNoteIds = [];
+  final List<String> _currentSelectedNoteIds = [];
 
   @override
   void didChangeDependencies() {
@@ -20,22 +22,43 @@ class _SelectNotesPageState extends State<SelectNotesPage> {
     final args = ModalRoute.of(context)!.settings.arguments;
 
     if(args != null && args is List<String>) {
-      _selectedNoteIds.addAll(args);
+      _originalSelectedNoteIds.addAll(args);
+      _currentSelectedNoteIds.addAll(args);
     }
+  }
+
+  bool _isSelectionModified() {
+    return !listEquals(_originalSelectedNoteIds, _currentSelectedNoteIds);
+  }
+
+  void _popWithResult() {
+    if(_isSelectionModified()) {
+      Navigator.pop(context, _currentSelectedNoteIds);
+    } else {
+      Navigator.pop(context, null);
+    }
+  }
+
+  @override
+  void dispose() {
+    _refreshNotes.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select Note'),
+        title: Text(
+          _currentSelectedNoteIds.isEmpty
+            ? 'Select Note'
+            : '${_currentSelectedNoteIds.length} Selected',
+        ),
         actionsPadding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            onPressed: () {
-              Navigator.pop(context, _selectedNoteIds);
-            },
+            onPressed: _popWithResult,
           ),
         ],
       ),
@@ -43,7 +66,7 @@ class _SelectNotesPageState extends State<SelectNotesPage> {
         canPop: false,
         onPopInvokedWithResult: (didPop, Object? result) {
           if(didPop) return;
-          Navigator.pop(context, _selectedNoteIds);
+          _popWithResult();
         },
         child: Column(
           children: [
@@ -55,13 +78,13 @@ class _SelectNotesPageState extends State<SelectNotesPage> {
               child: NotesList(
                 refreshNotifier: _refreshNotes,
                 fromPage: AppRoutes.selectNotes,
-                selectedNoteIds: _selectedNoteIds,
+                selectedNoteIds: _currentSelectedNoteIds,
                 onNoteSelected: (noteId) {
                   setState(() {
-                    if(_selectedNoteIds.contains(noteId)) {
-                      _selectedNoteIds.remove(noteId);
+                    if(_currentSelectedNoteIds.contains(noteId)) {
+                      _currentSelectedNoteIds.remove(noteId);
                     } else {
-                      _selectedNoteIds.add(noteId);
+                      _currentSelectedNoteIds.add(noteId);
                     }
                   });
                 },

@@ -172,8 +172,8 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
           setState(() {
             _currentNoteIds = result;
           });
+          _refreshNotes.value++;
         }
-        _refreshNotes.value++;
         break;
     }
   }
