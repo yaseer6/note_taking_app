@@ -1,58 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:note_taking_app/core/routes.dart';
 import '../models/note_model.dart';
-import 'package:intl/intl.dart';
+import 'package:note_taking_app/utils/formatters.dart';
 
 class NoteCard extends StatelessWidget {
   final Note note;
-  final VoidCallback onRefresh;
-  final String fromPage;
   final bool isSelected;
-  final VoidCallback onSelected;
+  final VoidCallback onTap;
 
   const NoteCard({
     super.key,
     required this.note,
-    required this.onRefresh,
-    required this.fromPage,
-    required this.isSelected,
-    required this.onSelected,
+    required this.onTap,
+    this.isSelected = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async {
-        switch(fromPage) {
-          case AppRoutes.home || AppRoutes.folderDetails:
-            final didUpdate = await Navigator.pushNamed(
-              context,
-              AppRoutes.addEditNote,
-              arguments: note,
-            );
-
-            if(didUpdate == true) {
-              onRefresh();
-            }
-            break;
-          case AppRoutes.selectNotes:
-            onSelected();
-            break;
-        }
-      },
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected && fromPage == AppRoutes.selectNotes? Colors.blue.withAlpha(77): const Color.fromRGBO(0, 0, 0, 0.06),
+          color: isSelected? Colors.blue.withAlpha(77): const Color.fromRGBO(0, 0, 0, 0.06),
           borderRadius: BorderRadius.circular(12),
-          border: isSelected && fromPage == AppRoutes.selectNotes? Border.all(color: Colors.blue, width: 2) : null,
+          border: isSelected? Border.all(color: Colors.blue, width: 2) : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             //displays date
             Text(
-              _formatDate(note.createdAt),
+              formatDateForCard(note.createdAt),
               style: const TextStyle(
                 fontSize: 12,
                 color: Colors.black54,
@@ -83,7 +61,7 @@ class NoteCard extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
                     child: Chip(
                       padding: const EdgeInsets.all(0),
-                      backgroundColor: isSelected && fromPage == AppRoutes.selectNotes? Colors.blue.withAlpha(77): const Color.fromRGBO(0, 0, 0, 0.1),
+                      backgroundColor: isSelected? Colors.blue.withAlpha(77): const Color.fromRGBO(0, 0, 0, 0.1),
                       side: BorderSide.none,
                       label: Text(
                         note.tags[index],
@@ -110,9 +88,5 @@ class NoteCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day} ${DateFormat.MMM().format(date)}';
   }
 }

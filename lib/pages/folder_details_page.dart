@@ -184,7 +184,6 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                         _refreshNotes.value++;
                       },
                       fromPage: AppRoutes.folderDetails,
-                      selectedNoteIds: _currentNoteIds,
                     );
                   },
                 ),

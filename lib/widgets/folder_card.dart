@@ -1,31 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:note_taking_app/core/routes.dart';
 import '../models/folder_model.dart';
 
 class FolderCard extends StatelessWidget {
   final Folder folder;
-  final VoidCallback onRefresh;
+  final VoidCallback onTap;
 
   const FolderCard({
     super.key,
     required this.folder,
-    required this.onRefresh,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async {
-        final didUpdate = await Navigator.pushNamed(
-          context,
-          AppRoutes.folderDetails,
-          arguments: folder,
-        );
-
-        if(didUpdate == true) {
-          onRefresh();
-        }
-      },
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
