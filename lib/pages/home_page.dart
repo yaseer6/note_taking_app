@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:note_taking_app/services/folder_storage_service.dart';
 import 'package:note_taking_app/services/note_storage_service.dart';
 import 'package:note_taking_app/widgets/folders_list.dart';
 import 'package:note_taking_app/widgets/notes_list.dart';
 import '../core/routes.dart';
 import 'package:note_taking_app/widgets/add_folder_dialog.dart';
-
+import '../models/folder_model.dart';
 import '../models/note_model.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,14 +18,17 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final ValueNotifier<int> _notesRefresh = ValueNotifier(0);
   final ValueNotifier<int> _foldersRefresh = ValueNotifier(0);
-  int _selectedTabIndex = 0;
   late Future<List<Note>> _notesFuture;
+  late Future<List<Folder>> _foldersFuture;
+  int _selectedTabIndex = 0;
   
   @override
   void initState() {
     super.initState();
     _loadNotes();
     _notesRefresh.addListener(_loadNotes);
+    _loadFolders();
+    _foldersRefresh.addListener(_loadFolders);
   }
   
   void _loadNotes() {
@@ -32,11 +36,18 @@ class _HomePageState extends State<HomePage> {
       _notesFuture = NoteService.readNotes();
     });
   }
+
+  void _loadFolders() {
+    setState(() {
+      _foldersFuture = FolderService.readFolders();
+    });
+  }
   
   @override
   void dispose() {
     _notesRefresh.removeListener(_loadNotes);
-    _notesRefresh.dispose(); // Critical for performance/memory
+    _foldersRefresh.removeListener(_loadFolders);
+    _notesRefresh.dispose();
     _foldersRefresh.dispose();
     super.dispose();
   }
@@ -89,15 +100,39 @@ class _HomePageState extends State<HomePage> {
                       final notes = snapshot.data!;
 
                       return NotesList(
-                          notes: notes,
-                          fromPage: AppRoutes.home,
-                          onRefresh: () {
-                            _notesRefresh.value++;
-                          },
+                        notes: notes,
+                        fromPage: AppRoutes.home,
+                        onRefresh: () {
+                          _notesRefresh.value++;
+                        },
                       );
                     },
                   ),
-                  FoldersList(refreshNotifier: _foldersRefresh),
+                  FutureBuilder(
+                    future: _foldersFuture,
+                    builder: (context, snapshot) {
+                      if(snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if(snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'),);
+                      }
+
+                      if(!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(child: Text('No folders found'));
+                      }
+
+                      final folders = snapshot.data!;
+
+                      return FoldersList(
+                        folders: folders,
+                        onRefresh: () {
+                          _foldersRefresh.value++;
+                        },
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
