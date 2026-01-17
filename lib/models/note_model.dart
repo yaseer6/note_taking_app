@@ -22,11 +22,11 @@ class Note {
     DateTime? updatedAt,
   }) {
     return Note(
-      id: this.id,
+      id: id,
       title: title ?? this.title,
       content: content ?? this.content,
       tags: tags ?? this.tags,
-      createdAt: this.createdAt,
+      createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -38,6 +38,7 @@ class Note {
       'content': content,
       'tags': tags,
       'createdAt': createdAt.toIso8601String(),
+      'updatedAt' : updatedAt.toIso8601String(),
     };
   }
 
