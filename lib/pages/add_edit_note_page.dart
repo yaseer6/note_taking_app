@@ -201,6 +201,25 @@ class _AddEditNotePageState extends State<AddEditNotePage> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Text(
+                'Created At',
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                DateFormat('dd MMM yyyy, hh:mm a').format(_originalNote?.createdAt ?? DateTime.now()),
+              ),
+            ),
+          ],
+        ),
+        TableRow(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
                 'Last Modified',
                 style: TextStyle(
                   color: Colors.grey,
