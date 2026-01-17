@@ -14,6 +14,10 @@ class FoldersList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if(folders.isEmpty) {
+      return const Center(child: Text('No folders yet'),);
+    }
+
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
