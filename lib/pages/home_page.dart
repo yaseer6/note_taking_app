@@ -14,7 +14,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final ValueNotifier<int> _notesRefresh = ValueNotifier(0);
   final ValueNotifier<int> _foldersRefresh = ValueNotifier(0);
-  int _selectedList = 0;
+  int _selectedTabIndex = 0;
 
   @override
   void dispose() {
@@ -25,44 +25,12 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             // Header Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    backgroundImage: AssetImage('assets/images/profile_pic.jpg'),
-                    radius: 25,
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    'Floyd Lawton',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  //search button
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.search_rounded),
-                    iconSize: 28,
-                  ),
-                  //menu button
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.more_horiz_rounded),
-                    iconSize: 28,
-                  ),
-                ],
-              ),
-            ),
+            _buildHeader(),
             const Divider(
               thickness: 1,
               indent: 16,
@@ -71,7 +39,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 8),
 
-            // Tab Selection Section
+            // Tab Section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -83,7 +51,7 @@ class _HomePageState extends State<HomePage> {
             // Content Section
             Expanded(
               child: IndexedStack(
-                index: _selectedList,
+                index: _selectedTabIndex,
                 children: [
                   NotesList(refreshNotifier: _notesRefresh, fromPage: AppRoutes.home),
                   FoldersList(refreshNotifier: _foldersRefresh),
@@ -96,7 +64,7 @@ class _HomePageState extends State<HomePage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _onFabPressed,
-        label: Text(_selectedList == 0 ? 'Add new note' : 'Add new folder'),
+        label: Text(_selectedTabIndex == 0 ? 'Add new note' : 'Add new folder'),
         icon: const Icon(Icons.add),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
@@ -108,10 +76,45 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildHeader() {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            backgroundImage: AssetImage('assets/images/profile_pic.jpg'),
+            radius: 25,
+          ),
+          const SizedBox(width: 16),
+          Text(
+            'Floyd Lawton',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Spacer(),
+          //search button
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.search_rounded),
+            iconSize: 28,
+          ),
+          //menu button
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.more_horiz_rounded),
+            iconSize: 28,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTabButton(String title, int index) {
-    final isSelected = _selectedList == index;
+    final isSelected = _selectedTabIndex == index;
     return TextButton(
-      onPressed: () => setState(() => _selectedList = index),
+      onPressed: () => setState(() => _selectedTabIndex = index),
       style: TextButton.styleFrom(
         foregroundColor: isSelected ? Colors.black : Colors.grey,
       ),
@@ -126,9 +129,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _onFabPressed() async {
-    if (_selectedList == 0) {
-      await Navigator.pushNamed(context, AppRoutes.addEditNote);
-      _notesRefresh.value++;
+    if (_selectedTabIndex == 0) {
+      final result = await Navigator.pushNamed(context, AppRoutes.addEditNote);
+
+      if(result == true && context.mounted) {
+        _notesRefresh.value++;
+      }
     } else {
       final bool folderWasCreated = await showAddFolderDialog(context);
 

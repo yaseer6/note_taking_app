@@ -33,12 +33,12 @@ class _AddEditNotePageState extends State<AddEditNotePage> {
 
   void _save(BuildContext context) async {
     if(_titleController.text.trim().isEmpty && _contentController.text.trim().isEmpty) {
-      Navigator.pop(context);
+      Navigator.pop(context, false);
       return;
     }
 
     if(!_isNoteModified()) {
-      Navigator.pop(context);
+      Navigator.pop(context, false);
       return;
     }
 
