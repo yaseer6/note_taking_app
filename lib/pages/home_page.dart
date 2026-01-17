@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:note_taking_app/services/note_storage_service.dart';
 import 'package:note_taking_app/widgets/folders_list.dart';
 import 'package:note_taking_app/widgets/notes_list.dart';
 import '../core/routes.dart';
 import 'package:note_taking_app/widgets/add_folder_dialog.dart';
+
+import '../models/note_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,9 +18,24 @@ class _HomePageState extends State<HomePage> {
   final ValueNotifier<int> _notesRefresh = ValueNotifier(0);
   final ValueNotifier<int> _foldersRefresh = ValueNotifier(0);
   int _selectedTabIndex = 0;
-
+  late Future<List<Note>> _notesFuture;
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadNotes();
+    _notesRefresh.addListener(_loadNotes);
+  }
+  
+  void _loadNotes() {
+    setState(() {
+      _notesFuture = NoteService.readNotes();
+    });
+  }
+  
   @override
   void dispose() {
+    _notesRefresh.removeListener(_loadNotes);
     _notesRefresh.dispose(); // Critical for performance/memory
     _foldersRefresh.dispose();
     super.dispose();
@@ -53,7 +71,32 @@ class _HomePageState extends State<HomePage> {
               child: IndexedStack(
                 index: _selectedTabIndex,
                 children: [
-                  NotesList(refreshNotifier: _notesRefresh, fromPage: AppRoutes.home),
+                  FutureBuilder(
+                    future: _notesFuture,
+                    builder: (context, snapshot) {
+                      if(snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if(snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'),);
+                      }
+
+                      if(!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(child: Text('No notes yet'));
+                      }
+
+                      final notes = snapshot.data!;
+
+                      return NotesList(
+                          notes: notes,
+                          fromPage: AppRoutes.home,
+                          onRefresh: () {
+                            _notesRefresh.value++;
+                          },
+                      );
+                    },
+                  ),
                   FoldersList(refreshNotifier: _foldersRefresh),
                 ],
               ),

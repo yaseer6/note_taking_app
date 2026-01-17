@@ -1,114 +1,47 @@
 import 'package:flutter/material.dart';
-import '../core/routes.dart';
 import '../models/note_model.dart';
 import 'note_card.dart';
-import 'package:note_taking_app/services/note_storage_service.dart';
 
-class NotesList extends StatefulWidget {
-  final ValueNotifier<int> refreshNotifier;
+class NotesList extends StatelessWidget {
+  final List<Note> notes;
   final String fromPage;
+  final VoidCallback onRefresh;
   final List<String>? selectedNoteIds;
   final Function(String)? onNoteSelected;
 
   const NotesList({
     super.key,
-    required this.refreshNotifier,
+    required this.notes,
     required this.fromPage,
+    required this.onRefresh,
     this.selectedNoteIds,
     this.onNoteSelected,
   });
 
   @override
-  State<NotesList> createState() => _NotesListState();
-}
-
-class _NotesListState extends State<NotesList> {
-  late Future<List<Note>> _notesFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadNotes();
-
-    widget.refreshNotifier.addListener(_handleRefresh);
-  }
-
-  void _handleRefresh() {
-    if(mounted) {
-      setState(() {
-        _loadNotes();
-      });
-    }
-  }
-
-  void _loadNotes() {
-    _notesFuture = NoteService.readNotes();
-  }
-
-  @override
-  void dispose() {
-    widget.refreshNotifier.removeListener(_handleRefresh);
-    super.dispose();
-  }
-
-  List<Note> selectedNotes(List<Note> allNotes) {
-    if(widget.selectedNoteIds == null) {
-      return [];
-    }
-    Map<String, Note> notesMap = { for (var n in allNotes) n.id : n };
-
-    List<Note> selectedNotes = [
-      for (var id in widget.selectedNoteIds!)
-        if (notesMap[id] != null) notesMap[id]!
-    ];
-
-    return selectedNotes;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Note>>(
-      future: _notesFuture,
-      builder: (context, snapshot) {
+    if(notes.isEmpty) {
+      return const Center(child: Text('No notes yet'),);
+    }
 
-        if(!snapshot.hasData) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-
-        if(snapshot.hasError) {
-          return Text('Error : ${snapshot.error}');
-        }
-
-        final notes = snapshot.data!;
-
-        if(notes.isEmpty) {
-          return const Center(child: Text('No notes yet'),);
-        }
-
-        return GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            crossAxisCount: 2,
-            childAspectRatio: 0.9,
-          ),
-          itemCount: widget.fromPage == AppRoutes.folderDetails ? selectedNotes(notes).length : notes.length,
-          itemBuilder: (context, index) {
-            final note = widget.fromPage == AppRoutes.folderDetails? selectedNotes(notes)[index] : notes[index];
-            return NoteCard(
-              note: note,
-              onRefresh: () {
-                widget.refreshNotifier.value++;
-              },
-              fromPage: widget.fromPage,
-              isSelected: widget.selectedNoteIds?.contains(note.id) ?? false,
-              onSelected: () {
-                widget.onNoteSelected?.call(note.id);
-              },
-            );
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        crossAxisCount: 2,
+        childAspectRatio: 0.9,
+      ),
+      itemCount: notes.length,
+      itemBuilder: (context, index) {
+        final note = notes[index];
+        return NoteCard(
+          note: note,
+          onRefresh: onRefresh,
+          fromPage: fromPage,
+          isSelected: selectedNoteIds?.contains(note.id) ?? false,
+          onSelected: () {
+            onNoteSelected?.call(note.id);
           },
         );
       },

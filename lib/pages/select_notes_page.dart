@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../core/routes.dart';
+import '../models/note_model.dart';
+import '../services/note_storage_service.dart';
 import '../widgets/notes_list.dart';
 
 class SelectNotesPage extends StatefulWidget {
@@ -14,6 +16,14 @@ class _SelectNotesPageState extends State<SelectNotesPage> {
   final ValueNotifier<int> _refreshNotes = ValueNotifier(0);
   final List<String> _originalSelectedNoteIds = [];
   final List<String> _currentSelectedNoteIds = [];
+  late Future<List<Note>> _notesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotes();
+    _refreshNotes.addListener(_loadNotes);
+  }
 
   @override
   void didChangeDependencies() {
@@ -25,6 +35,12 @@ class _SelectNotesPageState extends State<SelectNotesPage> {
       _originalSelectedNoteIds.addAll(args);
       _currentSelectedNoteIds.addAll(args);
     }
+  }
+
+  void _loadNotes() {
+    setState(() {
+      _notesFuture = NoteService.readNotes();
+    });
   }
 
   bool _isSelectionModified() {
@@ -41,6 +57,7 @@ class _SelectNotesPageState extends State<SelectNotesPage> {
 
   @override
   void dispose() {
+    _refreshNotes.removeListener(_loadNotes);
     _refreshNotes.dispose();
     super.dispose();
   }
@@ -75,19 +92,41 @@ class _SelectNotesPageState extends State<SelectNotesPage> {
               color: Color.fromRGBO(0, 0, 0, 0.08),
             ),
             Expanded(
-              child: NotesList(
-                refreshNotifier: _refreshNotes,
-                fromPage: AppRoutes.selectNotes,
-                selectedNoteIds: _currentSelectedNoteIds,
-                onNoteSelected: (noteId) {
-                  setState(() {
-                    if(_currentSelectedNoteIds.contains(noteId)) {
-                      _currentSelectedNoteIds.remove(noteId);
-                    } else {
-                      _currentSelectedNoteIds.add(noteId);
-                    }
-                  });
-                },
+              child: FutureBuilder(
+                future: _notesFuture,
+                builder: (context, snapshot) {
+                  if(snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(),);
+                  }
+
+                  if(snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'),);
+                  }
+
+                  if(!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('No notes yet'),);
+                  }
+
+                  final allNotes = snapshot.data!;
+
+                  return NotesList(
+                    notes: allNotes,
+                    onRefresh: () {
+                      _refreshNotes.value++;
+                    },
+                    fromPage: AppRoutes.selectNotes,
+                    selectedNoteIds: _currentSelectedNoteIds,
+                    onNoteSelected: (noteId) {
+                      setState(() {
+                        if(_currentSelectedNoteIds.contains(noteId)) {
+                          _currentSelectedNoteIds.remove(noteId);
+                        } else {
+                          _currentSelectedNoteIds.add(noteId);
+                        }
+                      });
+                    },
+                  );
+                }
               ),
             ),
           ],

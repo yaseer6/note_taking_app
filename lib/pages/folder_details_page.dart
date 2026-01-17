@@ -4,8 +4,10 @@ import 'package:note_taking_app/data/folder_icons.dart';
 import 'package:note_taking_app/models/folder_model.dart';
 import 'package:note_taking_app/services/folder_storage_service.dart';
 import 'package:intl/intl.dart';
+import 'package:note_taking_app/services/note_storage_service.dart';
 import 'package:note_taking_app/widgets/notes_list.dart';
 import '../core/routes.dart';
+import '../models/note_model.dart';
 
 class FolderDetailsPage extends StatefulWidget {
   const FolderDetailsPage({super.key});
@@ -20,6 +22,14 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
   late int _currentIconCode;
   late List<String> _currentNoteIds;
   Folder? _originalFolder;
+  late Future<List<Note>> _notesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotes();
+    _refreshNotes.addListener(_loadNotes);
+  }
 
   @override
   void didChangeDependencies() {
@@ -34,6 +44,12 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
       _currentIconCode = _originalFolder!.iconCode;
       _currentNoteIds = List<String>.from(_originalFolder!.noteIds);
     }
+  }
+
+  void _loadNotes() {
+    setState(() {
+      _notesFuture = NoteService.readNotes();
+    });
   }
 
   void _save(BuildContext context) async {
@@ -75,6 +91,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
   @override
   void dispose() {
     _titleController.dispose();
+    _refreshNotes.removeListener(_loadNotes);
     super.dispose();
   }
 
@@ -139,10 +156,37 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                 ),
               ),
               Expanded(
-                child: NotesList(
-                  refreshNotifier: _refreshNotes,
-                  fromPage: AppRoutes.folderDetails,
-                  selectedNoteIds: _currentNoteIds,
+                child: FutureBuilder<List<Note>>(
+                  future: _notesFuture,
+                  builder: (context, snapshot) {
+                    if(snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(),);
+                    }
+
+                    if(snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'),);
+                    }
+
+                    if(!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(child: Text('No notes yet'));
+                    }
+
+                    final allNotes = snapshot.data!;
+
+                    //filtering for the specific folder
+                    final Set<String> folderNoteIds = _currentNoteIds.toSet();
+
+                    final List<Note> notesForThisFolder = allNotes.where((note) => folderNoteIds.contains(note.id)).toList();
+
+                    return NotesList(
+                      notes: notesForThisFolder,
+                      onRefresh: () {
+                        _refreshNotes.value++;
+                      },
+                      fromPage: AppRoutes.folderDetails,
+                      selectedNoteIds: _currentNoteIds,
+                    );
+                  },
                 ),
               ),
             ],
