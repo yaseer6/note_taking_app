@@ -8,6 +8,8 @@ class FolderService {
   static List<Folder>? _cachedFolders;
   static File? _cachedFile;
 
+  static bool _isInitialized = false;
+
   static Future<File> _getFile() async {
     if (_cachedFile != null) return _cachedFile!;
 
@@ -16,53 +18,62 @@ class FolderService {
     return _cachedFile!;
   }
 
-  static Future<List<Folder>> readFolders() async {
-    if (_cachedFolders != null) return List.from(_cachedFolders!);
+  static Future<void> _ensureInitialized() async {
+    if(_isInitialized) return;
 
     try {
       final file = await _getFile();
-      if (!await file.exists()) {
-        return [];
-      }
 
-      final jsonString = await file.readAsString();
-      if (jsonString.isEmpty) {
-        return [];
+      if(await file.exists()) {
+        final jsonString = await file.readAsString();
+        if(jsonString.isNotEmpty) {
+          final List<dynamic> decodedJson = jsonDecode(jsonString);
+          _cachedFolders = decodedJson.map((e) => Folder.fromJson(e)).toList();
+        } else {
+          _cachedFolders = [];
+        }
+      } else {
+        _cachedFolders = [];
       }
-
-      final List<dynamic> decodedJson = jsonDecode(jsonString);
-      _cachedFolders = decodedJson.map((e) => Folder.fromJson(e)).toList();
-      return List.from(_cachedFolders!);
+      _isInitialized = true;
     } catch (e) {
-      return [];
+      print('Failed to initialize FolderService: $e');
+      _cachedFolders = [];
+      _isInitialized = true;
     }
+  }
+
+  static Future<List<Folder>> readFolders() async {
+    await _ensureInitialized();
+    return List.from(_cachedFolders!);
   }
 
   static Future<void> createFolder(Folder folder) async {
-    final folders = await readFolders();
-    folders.add(folder);
-    await _writeFolders(folders);
+    await _ensureInitialized();
+    _cachedFolders!.add(folder);
+    await _writeFolders();
   }
 
   static Future<void> deleteFolder(String id) async {
-    final folders = await readFolders();
-    folders.removeWhere((folder) => folder.id == id);
-    await _writeFolders(folders);
+    await _ensureInitialized();
+    _cachedFolders!.removeWhere((folder) => folder.id == id);
+    await _writeFolders();
   }
 
   static Future<void> updateFolder(Folder updatedFolder) async {
-    final folders = await readFolders();
-    final index = folders.indexWhere((folder) => folder.id == updatedFolder.id);
+    await _ensureInitialized();
+    final index = _cachedFolders!.indexWhere((folder) => folder.id == updatedFolder.id);
     if (index != -1) {
-      folders[index] = updatedFolder;
-      await _writeFolders(folders);
+      _cachedFolders![index] = updatedFolder;
+      await _writeFolders();
     }
   }
 
-  static Future<void> _writeFolders(List<Folder> folders) async {
-    _cachedFolders = List.from(folders);
+  static Future<void> _writeFolders() async {
+    if(_cachedFolders == null) return;
+
     final file = await _getFile();
-    final encoded = jsonEncode(folders.map((e) => e.toJson()).toList());
+    final encoded = jsonEncode(_cachedFolders!.map((e) => e.toJson()).toList());
     await file.writeAsString(encoded); // Added await here
   }
 }

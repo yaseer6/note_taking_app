@@ -7,6 +7,8 @@ class NoteService {
   static List<Note>? _cachedNotes;
   static File? _cachedFile;
 
+  static bool _isInitialized = false;
+
   static Future<File> _getFile() async {
     if (_cachedFile != null) return _cachedFile!;
 
@@ -15,49 +17,63 @@ class NoteService {
     return _cachedFile!;
   }
 
-  static Future<List<Note>> readNotes() async {
-    if (_cachedNotes != null) return List.from(_cachedNotes!);
+  static Future<void> _ensureInitialized() async {
+    if(_isInitialized) return;
 
     try {
       final file = await _getFile();
-      if (!await file.exists()) return [];
 
-      final jsonString = await file.readAsString();
-      if (jsonString.isEmpty) return [];
+      if (await file.exists()) {
+        final jsonString = await file.readAsString();
+        if(jsonString.isNotEmpty) {
+          final List<dynamic> decodedJson = jsonDecode(jsonString);
+          _cachedNotes = decodedJson.map((e) => Note.fromJson(e)).toList();
+        } else {
+          _cachedNotes = [];
+        }
+      } else {
+        _cachedNotes = [];
+      }
 
-      final List<dynamic> decodedJson = jsonDecode(jsonString);
-      _cachedNotes = decodedJson.map((e) => Note.fromJson(e)).toList();
-      return List.from(_cachedNotes!);
+      _isInitialized = true;
     } catch (e) {
-      return [];
+      print('Failed to initialize NoteService: $e');
+      _cachedNotes = [];
+      _isInitialized = true;
     }
+  }
+
+  static Future<List<Note>> readNotes() async {
+    await _ensureInitialized();
+    return List.from(_cachedNotes!);
   }
 
   static Future<void> addNote(Note note) async {
-    final notes = await readNotes();
-    notes.add(note);
-    await _writeNotes(notes);
+    await _ensureInitialized();
+    _cachedNotes!.add(note);
+    await _writeNotes();
   }
 
   static Future<void> deleteNote(String id) async {
-    final notes = await readNotes();
-    notes.removeWhere((note) => note.id == id);
-    await _writeNotes(notes);
+    await _ensureInitialized();
+    _cachedNotes!.removeWhere((note) => note.id == id);
+    await _writeNotes();
   }
 
   static Future<void> updateNote(Note updatedNote) async {
-    final notes = await readNotes();
-    final index = notes.indexWhere((note) => note.id == updatedNote.id);
+    await _ensureInitialized();
+    final index = _cachedNotes!.indexWhere((note) => note.id == updatedNote.id);
     if (index != -1) {
-      notes[index] = updatedNote;
-      await _writeNotes(notes);
+      _cachedNotes![index] = updatedNote;
+      await _writeNotes();
     }
   }
 
-  static Future<void> _writeNotes(List<Note> notes) async {
-    _cachedNotes = List.from(notes);
+  static Future<void> _writeNotes() async {
+    if(_cachedNotes == null) return;
+
     final file = await _getFile();
-    final encoded = jsonEncode(notes.map((e) => e.toJson()).toList());
+    final encoded = jsonEncode(_cachedNotes!.map((e) => e.toJson()).toList());
     await file.writeAsString(encoded); // Added await here
   }
 }
