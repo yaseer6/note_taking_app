@@ -4,6 +4,9 @@ import 'package:note_taking_app/pages/folder_details_page.dart';
 import 'package:note_taking_app/pages/home_page.dart';
 import 'package:note_taking_app/pages/select_notes_page.dart';
 
+import '../models/folder_model.dart';
+import '../models/note_model.dart';
+
 class AppRouter {
   static const String home = '/';
   static const String addEditNote = '/add-edit-note';
@@ -15,11 +18,14 @@ class AppRouter {
       case home:
         return MaterialPageRoute(builder: (context) => const HomePage());
       case addEditNote:
-        return MaterialPageRoute(builder: (context) => const AddEditNotePage());
+        final args = settings.arguments as Note?;
+        return MaterialPageRoute(builder: (context) => AddEditNotePage(note: args));
       case folderDetails:
-        return MaterialPageRoute(builder: (context) => const FolderDetailsPage());
+        final args = settings.arguments as Folder;
+        return MaterialPageRoute(builder: (context) => FolderDetailsPage(folder: args));
       case selectNotes:
-        return MaterialPageRoute(builder: (context) => const SelectNotesPage());
+        final args = settings.arguments as List<String>;
+        return MaterialPageRoute(builder: (context) => SelectNotesPage(notesIds: args));
       default:
         return MaterialPageRoute(
           builder: (context) => Scaffold(

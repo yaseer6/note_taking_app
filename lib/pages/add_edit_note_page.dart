@@ -5,7 +5,11 @@ import 'package:note_taking_app/models/note_model.dart';
 import 'package:note_taking_app/services/note_storage_service.dart';
 
 class AddEditNotePage extends StatefulWidget {
-  const AddEditNotePage({super.key});
+  final Note? note;
+  const AddEditNotePage({
+    super.key,
+    required this.note,
+  });
 
   @override
   State<AddEditNotePage> createState() => _AddEditNotePageState();
@@ -21,10 +25,8 @@ class _AddEditNotePageState extends State<AddEditNotePage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final args = ModalRoute.of(context)?.settings.arguments;
-
-    if(args is Note && _originalNote == null) {
-      _originalNote = args;
+    if(widget.note is Note && _originalNote == null) {
+      _originalNote = widget.note;
       _titleController.text = _originalNote!.title;
       _contentController.text = _originalNote!.content;
       _currentTags = List.from(_originalNote!.tags);

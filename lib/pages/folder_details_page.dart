@@ -10,7 +10,12 @@ import '../core/app_router.dart';
 import '../models/note_model.dart';
 
 class FolderDetailsPage extends StatefulWidget {
-  const FolderDetailsPage({super.key});
+  final Folder folder;
+
+  const FolderDetailsPage({
+    super.key,
+    required this.folder,
+  });
 
   @override
   State<FolderDetailsPage> createState() => _FolderDetailsPageState();
@@ -36,9 +41,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
     super.didChangeDependencies();
 
     if(_originalFolder == null) {
-      final args = ModalRoute.of(context)!.settings.arguments as Folder;
-
-      _originalFolder = args;
+      _originalFolder = widget.folder;
       _titleController.text = _originalFolder!.name;
 
       _currentIconCode = _originalFolder!.iconCode;

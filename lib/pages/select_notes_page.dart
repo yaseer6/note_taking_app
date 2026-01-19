@@ -6,7 +6,11 @@ import '../services/note_storage_service.dart';
 import '../widgets/notes_list.dart';
 
 class SelectNotesPage extends StatefulWidget {
-  const SelectNotesPage({super.key});
+  final List<String> notesIds;
+  const SelectNotesPage({
+    super.key,
+    required this.notesIds,
+  });
 
   @override
   State<SelectNotesPage> createState() => _SelectNotesPageState();
