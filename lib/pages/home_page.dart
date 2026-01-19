@@ -3,7 +3,7 @@ import 'package:note_taking_app/services/folder_storage_service.dart';
 import 'package:note_taking_app/services/note_storage_service.dart';
 import 'package:note_taking_app/widgets/folders_list.dart';
 import 'package:note_taking_app/widgets/notes_list.dart';
-import '../core/routes.dart';
+import '../core/app_router.dart';
 import 'package:note_taking_app/widgets/add_folder_dialog.dart';
 import '../models/folder_model.dart';
 import '../models/note_model.dart';
@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
 
                       return NotesList(
                         notes: notes,
-                        fromPage: AppRoutes.home,
+                        fromPage: AppRouter.home,
                         onRefresh: () {
                           _notesRefresh.value++;
                         },
@@ -208,7 +208,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _onFabPressed() async {
     if (_selectedTabIndex == 0) {
-      final result = await Navigator.pushNamed(context, AppRoutes.addEditNote);
+      final result = await Navigator.pushNamed(context, AppRouter.addEditNote);
 
       if(result == true && context.mounted) {
         _notesRefresh.value++;

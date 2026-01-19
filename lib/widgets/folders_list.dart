@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../core/routes.dart';
+import '../core/app_router.dart';
 import '../models/folder_model.dart';
 import 'folder_card.dart';
 
@@ -36,7 +36,7 @@ class FoldersList extends StatelessWidget {
           onTap: () async {
             final didUpdate = await Navigator.pushNamed(
               context,
-              AppRoutes.folderDetails,
+              AppRouter.folderDetails,
               arguments: folder,
             );
 

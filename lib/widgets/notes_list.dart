@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:note_taking_app/core/routes.dart';
+import 'package:note_taking_app/core/app_router.dart';
 import '../models/note_model.dart';
 import 'note_card.dart';
 
@@ -39,17 +39,17 @@ class NotesList extends StatelessWidget {
         return NoteCard(
           note: note,
           onTap: () async {
-            if(fromPage == AppRoutes.home || fromPage == AppRoutes.folderDetails) {
+            if(fromPage == AppRouter.home || fromPage == AppRouter.folderDetails) {
               final didUpdate = await Navigator.pushNamed(
                 context,
-                AppRoutes.addEditNote,
+                AppRouter.addEditNote,
                 arguments: note,
               );
 
               if(didUpdate == true) {
                 onRefresh();
               }
-            } else if(fromPage == AppRoutes.selectNotes) {
+            } else if(fromPage == AppRouter.selectNotes) {
               onNoteSelected?.call(note.id);
             }
           },

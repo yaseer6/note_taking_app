@@ -6,7 +6,7 @@ import 'package:note_taking_app/services/folder_storage_service.dart';
 import 'package:intl/intl.dart';
 import 'package:note_taking_app/services/note_storage_service.dart';
 import 'package:note_taking_app/widgets/notes_list.dart';
-import '../core/routes.dart';
+import '../core/app_router.dart';
 import '../models/note_model.dart';
 
 class FolderDetailsPage extends StatefulWidget {
@@ -183,7 +183,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                       onRefresh: () {
                         _refreshNotes.value++;
                       },
-                      fromPage: AppRoutes.folderDetails,
+                      fromPage: AppRouter.folderDetails,
                     );
                   },
                 ),
@@ -207,7 +207,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
       case 'addRemoveNote':
         final result = await Navigator.pushNamed(
           context,
-          AppRoutes.selectNotes,
+          AppRouter.selectNotes,
           arguments: _currentNoteIds,
         );
 

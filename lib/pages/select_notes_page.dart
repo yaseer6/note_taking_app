@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../core/routes.dart';
+import '../core/app_router.dart';
 import '../models/note_model.dart';
 import '../services/note_storage_service.dart';
 import '../widgets/notes_list.dart';
@@ -114,7 +114,7 @@ class _SelectNotesPageState extends State<SelectNotesPage> {
                     onRefresh: () {
                       _refreshNotes.value++;
                     },
-                    fromPage: AppRoutes.selectNotes,
+                    fromPage: AppRouter.selectNotes,
                     selectedNoteIds: _currentSelectedNoteIds,
                     onNoteSelected: (noteId) {
                       setState(() {
