@@ -39,7 +39,7 @@ class NotesList extends StatelessWidget {
         return NoteCard(
           note: note,
           onTap: () async {
-            if(fromPage == AppRouter.home || fromPage == AppRouter.folderDetails) {
+            if(fromPage == AppRouter.home || fromPage == AppRouter.folderDetails || fromPage == AppRouter.searchNotes) {
               final didUpdate = await Navigator.pushNamed(
                 context,
                 AppRouter.addEditNote,

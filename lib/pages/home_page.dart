@@ -131,7 +131,13 @@ class _HomePageState extends State<HomePage> {
       actionsPadding: EdgeInsets.fromLTRB(0, 0, 4, 0),
       actions: [
         IconButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pushNamed(
+              context,
+              AppRouter.searchNotes,
+              arguments: _notesFuture,
+            );
+          },
           icon: const Icon(Icons.search_rounded),
           iconSize: 28,
         ),

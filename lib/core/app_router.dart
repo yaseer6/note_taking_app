@@ -3,15 +3,16 @@ import 'package:note_taking_app/pages/add_edit_note_page.dart';
 import 'package:note_taking_app/pages/folder_details_page.dart';
 import 'package:note_taking_app/pages/home_page.dart';
 import 'package:note_taking_app/pages/select_notes_page.dart';
-
 import '../models/folder_model.dart';
 import '../models/note_model.dart';
+import '../pages/search_page.dart';
 
 class AppRouter {
   static const String home = '/';
   static const String addEditNote = '/add-edit-note';
   static const String folderDetails = '/folder-details';
   static const String selectNotes = '/select-notes';
+  static const String searchNotes = '/search-notes';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -26,6 +27,9 @@ class AppRouter {
       case selectNotes:
         final args = settings.arguments as List<String>;
         return MaterialPageRoute(builder: (context) => SelectNotesPage(notesIds: args));
+      case searchNotes:
+        final args = settings.arguments as Future<List<Note>>;
+        return MaterialPageRoute(builder: (context) => SearchPage(notesFuture: args));
       default:
         return MaterialPageRoute(
           builder: (context) => Scaffold(
